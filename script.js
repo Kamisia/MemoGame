@@ -1,0 +1,141 @@
+window.onload = () => {
+  memory.init();
+};
+
+class Memory {
+  symbols = [
+    "dog",
+    "dog",
+    "paw",
+    "paw",
+    "cat",
+    "cat",
+    "dove",
+    "dove",
+    "crow",
+    "crow",
+    "cow",
+    "cow",
+    "horse",
+    "horse",
+    "egg",
+    "egg",
+    "hippo",
+    "hippo",
+    "otter",
+    "otter",
+    "fish",
+    "fish",
+    "spider",
+    "spider",
+    "frog",
+    "frog",
+    "mosquito",
+    "mosquito",
+    "worm",
+    "worm",
+    "dragon",
+    "dragon",
+  ];
+
+  numTiles = 16;
+  score = 0;
+  selectedTails = [];
+  init = () => {
+    this.scoreInfo = document.querySelector(".score");
+    this.deck = document.querySelector(".deck");
+    this.repeatButton = document.querySelector(".repeat");
+
+    this.setGameInfo();
+    this.randomizeSymbols();
+    this.tiles = [];
+    this.addTiles();
+    this.addListeners();
+  };
+  setGameInfo = () => {
+    this.scoreInfo.innerHTML = "Punkty: " + this.score;
+  };
+  randomizeSymbols = () => {
+    for (let i = this.symbols.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let temp = this.symbols[i];
+      this.symbols[i] = this.symbols[j];
+      this.symbols[j] = temp;
+    }
+  };
+  addTiles = () => {
+    const symbolsCopy = [...this.symbols];
+    for (let i = 0; i < this.numTiles; i++) {
+      const t = this.addTile(i, symbolsCopy.pop());
+      this.tiles.push(t);
+    }
+  };
+  addTile = (index, symbol) => {
+    const div = document.createElement("div");
+    div.classList.add("card");
+    div.id = "card" + index;
+    div.innerHTML = `
+                <i class="fa card-face card-front"></i>
+                <i data-symbol="${symbol}" class="fa fa-${symbol} card-face card-back"></i>  
+        `;
+    this.deck.appendChild(div);
+    return div;
+  };
+  addListeners = () => {
+    this.tiles.forEach((tile) => {
+      tile.addEventListener("click", () => this.tileClicked(tile));
+    });
+    this.repeatButton.addEventListener("click", this.restart);
+  };
+  tileClicked = (tile) => {
+    const tileStatus = tile.getAttribute("data-status");
+    if (tileStatus == "matched") return;
+
+    tile.classList.toggle("is-flipped");
+
+    const tileSymbol = tile
+      .querySelector("i.card-back")
+      .getAttribute("data-symbol");
+
+    this.selectedTails.push({
+      div: tile,
+      symbol: tileSymbol,
+    });
+    if (this.selectedTails.length == 2) {
+      this.checkSelection();
+    }
+  };
+  checkSelection = () => {
+    const tileA = this.selectedTails[0];
+    const tileB = this.selectedTails[1];
+
+    if (tileA.symbol == tileB.symbol) {
+      tileA.div.setAttribute("data-status", "matched");
+      tileB.div.setAttribute("data-status", "matched");
+      this.score += 20;
+    } else {
+      this.score -= 1;
+      this.noMatchAnimation(tileA, tileB);
+    }
+    this.selectedTails = [];
+    this.setGameInfo();
+  };
+  noMatchAnimation = (tileA, tileB) => {
+    setTimeout(() => {
+      tileA.div.classList.toggle("is-flipped");
+      tileB.div.classList.toggle("is-flipped");
+    }, 1000);
+  };
+
+  restart = () => {
+    this.selectedTails = [];
+    this.score = 0;
+    this.setGameInfo();
+    this.tiles.forEach((tile) => {
+      tile.classList.remove("is-flipped");
+      tile.setAttribute("data-status", "");
+    });
+  };
+}
+
+const memory = new Memory();
